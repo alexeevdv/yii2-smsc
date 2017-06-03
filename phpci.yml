@@ -1,0 +1,19 @@
+build_settings:
+    clone_depth: 1 # depth of 1 is a shallow clone, remove this line to clone entire repo
+    ignore:
+        - "vendor"
+setup:
+    composer:
+        action: "install"
+        prefer_dist: true
+test:
+    php_code_sniffer:
+        allow_failures: false
+        standard: "vendor/yiisoft/yii2-coding-standards/Yii2"
+        path:
+            - "src"
+    codeception:
+        allow_failures: false
+        config: "codeception.yml"
+        path: "tests/_output/"
+        args: "report.xml --no-ansi"
