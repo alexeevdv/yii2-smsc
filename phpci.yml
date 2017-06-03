@@ -10,8 +10,7 @@ test:
     php_code_sniffer:
         allow_failures: false
         standard: "vendor/yiisoft/yii2-coding-standards/Yii2"
-        path:
-            - "src"
+        path: "src"
     codeception:
         allow_failures: false
         config: "codeception.yml"
