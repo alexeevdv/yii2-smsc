@@ -101,4 +101,22 @@ class SmscTest extends PHPUnit_Framework_TestCase
             'charset' => 'windows-1252',
         ]);
     }
+
+    public function testGetCommonParams()
+    {
+        $smsc = new Smsc([
+            'login' => 'login',
+            'password' => 'password',
+            'format' => Smsc::FORMAT_JSON,
+        ]);
+
+        $this->assertEquals(
+            [
+            'login' => 'login',
+            'psw' => 'password',
+            'fmt' => Smsc::FORMAT_JSON,
+            ],
+            $smsc->getCommonParams()
+        );
+    }
 }

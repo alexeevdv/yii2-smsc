@@ -7,3 +7,7 @@ paths:
 settings:
   bootstrap: "_bootstrap.php"
   lint: true
+coverage:
+  enabled: true
+  include:
+    - "src/*"
