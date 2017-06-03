@@ -1,0 +1,27 @@
+{
+    "name": "alexeevdv/yii2-smsc",
+    "description": "Yii2 smsc extension",
+    "keywords": ["yii2", "smsc", "extensions"],
+    "homepage": "https://github.com/alexeevdv/yii2-smsc",
+    "type": "yii2-extension",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Dmitry V. Alexeev",
+            "email": "mail@alexeevdv.ru",
+            "homepage": "https://alexeevdv.ru"
+        }
+    ],
+    "require" :{
+        "yiisoft/yii2": "^2.0",
+        "yiisoft/yii2-httpclient": "~2.0.0"
+    },
+    "require-dev": {
+        "codeception/codeception": "^2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "alexeevdv\\sms\\": "src"
+        }
+    }
+}
