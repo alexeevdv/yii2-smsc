@@ -160,6 +160,26 @@ class Smsc extends \yii\base\Component
     }
 
     /**
+     * @param string $numbers
+     * @param string $message
+     * @param array $params
+     * @return array|null
+     */
+    public function sendViber($numbers, $message, array $params = [])
+    {
+        return $this->send(
+            $numbers,
+            $message,
+            ArrayHelper::merge(
+                [
+                    'viber' => 1,
+                ],
+                $params
+            )
+        );
+    }
+
+    /**
      * @param array $params
      * @return array|null
      */

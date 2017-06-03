@@ -40,40 +40,28 @@ class SmscTest extends PHPUnit_Framework_TestCase
 
     public function testXmlFormatIsNotSuppported()
     {
-        $smsc = new Smsc([
-            'login' => 'login',
-            'password' => 'password',
-        ]);
+        $smsc = $this->getJsonInstance();
         $this->expectException(NotSupportedException::class);
         $smsc->setFormat(Smsc::FORMAT_XML);
     }
 
     public function testStringFormatIsNotSupported()
     {
-        $smsc = new Smsc([
-            'login' => 'login',
-            'password' => 'password',
-        ]);
+        $smsc = $this->getJsonInstance();
         $this->expectException(NotSupportedException::class);
         $smsc->setFormat(Smsc::FORMAT_STRING);
     }
 
     public function testNumbersFormatIsNotSupported()
     {
-        $smsc = new Smsc([
-            'login' => 'login',
-            'password' => 'password',
-        ]);
+        $smsc = $this->getJsonInstance();
         $this->expectException(NotSupportedException::class);
         $smsc->setFormat(Smsc::FORMAT_NUMBERS);
     }
 
     public function testGetAndSetFormat()
     {
-        $smsc = new Smsc([
-            'login' => 'login',
-            'password' => 'password',
-        ]);
+        $smsc = $this->getJsonInstance();
         $this->assertEquals(Smsc::FORMAT_JSON, $smsc->getFormat(), 'JSON should be set by default');
         $smsc->setFormat(Smsc::FORMAT_JSON);
         $this->assertEquals(Smsc::FORMAT_JSON, $smsc->getFormat());
@@ -81,10 +69,7 @@ class SmscTest extends PHPUnit_Framework_TestCase
 
     public function testGetAndSetCharset()
     {
-        $smsc = new Smsc([
-            'login' => 'login',
-            'password' => 'password',
-        ]);
+        $smsc = $this->getJsonInstance();
         $this->assertEquals('utf-8', $smsc->getCharset(), 'UTF-8 should be set by default');
         $smsc->setCharset('utf-8');
         $this->assertEquals('utf-8', $smsc->getCharset());
@@ -101,17 +86,12 @@ class SmscTest extends PHPUnit_Framework_TestCase
 
     public function testGetCommonParams()
     {
-        $smsc = new Smsc([
-            'login' => 'login',
-            'password' => 'password',
-            'format' => Smsc::FORMAT_JSON,
-        ]);
-
+        $smsc = $this->getJsonInstance();
         $this->assertEquals(
             [
-            'login' => 'login',
-            'psw' => 'password',
-            'fmt' => Smsc::FORMAT_JSON,
+                'login' => 'login',
+                'psw' => 'password',
+                'fmt' => Smsc::FORMAT_JSON,
             ],
             $smsc->getCommonParams()
         );
@@ -119,16 +99,53 @@ class SmscTest extends PHPUnit_Framework_TestCase
 
     public function testApiCall()
     {
-        $smsc = new Smsc([
+        $smsc = $this->getJsonInstance();
+        $this->assertNull($smsc->apiCall(null));
+        $this->assertNull($smsc->apiCall('balance.php'));
+        $this->assertNull($smsc->apiCall('balance.php', [
+            'format' => Smsc::FORMAT_XML,
             'login' => 'login',
-            'password' => 'password',
-        ]);
+            'psw' => 'password',
+        ]));
 
         $response = $smsc->apiCall('balance.php', [
             'fmt' => Smsc::FORMAT_JSON,
             'login' => 'login',
-            'password' => 'password',
+            'psw' => 'password',
         ]);
         $this->assertEquals(['balance' => 100], $response);
+    }
+
+    public function testBalance()
+    {
+        $this->assertEquals(['balance' => 100], $this->getJsonInstance()->balance());
+    }
+
+    public function testSend()
+    {
+        $smsc = $this->getJsonInstance();
+        $response = $smsc->send('79532328822', 'Test');
+        $this->assertArrayHasKey('id', $response);
+        $this->assertArrayHasKey('cnt', $response);
+        $this->assertArrayHasKey('cost', $response);
+        $this->assertArrayHasKey('balance', $response);
+    }
+
+    public function testStatus()
+    {
+        $smsc = $this->getJsonInstance();
+    }
+
+    /**
+     * @return Smsc
+     */
+    private function getJsonInstance()
+    {
+        $smsc = new Smsc([
+            'login' => 'login',
+            'password' => 'password',
+            'format' => Smsc::FORMAT_JSON,
+        ]);
+        return $smsc;
     }
 }
