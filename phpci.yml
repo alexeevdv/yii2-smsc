@@ -15,4 +15,4 @@ test:
         allow_failures: false
         config: "codeception.yml"
         path: "tests/_output/"
-        args: "report.xml --no-ansi --coverage"
+        args: "report.xml --no-ansi --coverage-html"
