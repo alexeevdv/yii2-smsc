@@ -3,12 +3,25 @@
 use alexeevdv\sms\Smsc;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
-use yii\httpclient\Client as HttpClient;
 use yii\di\Container;
-use Mockery;
+use yii\httpclient\Client as HttpClient;
 
 class SmscTest extends PHPUnit_Framework_TestCase
 {
+    public function setUp()
+    {
+        Yii::$container = new Container([
+            'singletons' => [
+                HttpClient::class => function () {
+                    return Mockery::mock(HttpClient::class . '[send]')
+                        ->shouldReceive('send')
+                        ->andReturnUsing(['SmscApiSimulation', 'handle'])
+                        ->getMock();
+                }
+            ],
+        ]);
+    }
+
     public function testLoginIsRequired()
     {
         $this->expectException(InvalidConfigException::class);
@@ -106,17 +119,6 @@ class SmscTest extends PHPUnit_Framework_TestCase
 
     public function testApiCall()
     {
-        Yii::$container = new Container([
-            'singletons' => [
-                HttpClient::class => function () {
-                    return Mockery::mock(HttpClient::class . '[send]')
-                        ->shouldReceive('send')
-                        ->andReturnUsing(['SmscApiSimulation', 'handle'])
-                        ->getMock();
-                }
-            ],
-        ]);
-
         $smsc = new Smsc([
             'login' => 'login',
             'password' => 'password',
