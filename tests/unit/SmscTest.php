@@ -3,6 +3,9 @@
 use alexeevdv\sms\Smsc;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
+use yii\httpclient\Client as HttpClient;
+use yii\di\Container;
+use Mockery;
 
 class SmscTest extends PHPUnit_Framework_TestCase
 {
@@ -22,84 +25,65 @@ class SmscTest extends PHPUnit_Framework_TestCase
         ]);
     }
 
-    public function testJsonFormatIsSupported()
-    {
-        new Smsc([
-            'login' => 'login',
-            'password' => 'password',
-            'format' => Smsc::FORMAT_JSON,
-        ]);
-    }
-
     public function testXmlFormatIsNotSuppported()
     {
-        $this->expectException(NotSupportedException::class);
-        new Smsc([
+        $smsc = new Smsc([
             'login' => 'login',
             'password' => 'password',
-            'format' => Smsc::FORMAT_XML,
         ]);
+        $this->expectException(NotSupportedException::class);
+        $smsc->setFormat(Smsc::FORMAT_XML);
     }
 
     public function testStringFormatIsNotSupported()
     {
-        $this->expectException(NotSupportedException::class);
-        new Smsc([
+        $smsc = new Smsc([
             'login' => 'login',
             'password' => 'password',
-            'format' => Smsc::FORMAT_STRING,
         ]);
+        $this->expectException(NotSupportedException::class);
+        $smsc->setFormat(Smsc::FORMAT_STRING);
     }
 
     public function testNumbersFormatIsNotSupported()
     {
+        $smsc = new Smsc([
+            'login' => 'login',
+            'password' => 'password',
+        ]);
         $this->expectException(NotSupportedException::class);
-        new Smsc([
-            'login' => 'login',
-            'password' => 'password',
-            'format' => Smsc::FORMAT_NUMBERS,
-        ]);
+        $smsc->setFormat(Smsc::FORMAT_NUMBERS);
     }
 
-    public function testWindows1251CharsetIsSupported()
+    public function testGetAndSetFormat()
     {
-        new Smsc([
+        $smsc = new Smsc([
             'login' => 'login',
             'password' => 'password',
-            'format' => Smsc::FORMAT_JSON,
-            'charset' => 'windows-1251',
         ]);
+        $this->assertEquals(Smsc::FORMAT_JSON, $smsc->getFormat(), 'JSON should be set by default');
+        $smsc->setFormat(Smsc::FORMAT_JSON);
+        $this->assertEquals(Smsc::FORMAT_JSON, $smsc->getFormat());
     }
 
-    public function testUtf8CharsetIsSupported()
+    public function testGetAndSetCharset()
     {
-        new Smsc([
+        $smsc = new Smsc([
             'login' => 'login',
             'password' => 'password',
-            'format' => Smsc::FORMAT_JSON,
-            'charset' => 'utf-8',
         ]);
-    }
+        $this->assertEquals('utf-8', $smsc->getCharset(), 'UTF-8 should be set by default');
+        $smsc->setCharset('utf-8');
+        $this->assertEquals('utf-8', $smsc->getCharset());
 
-    public function testKoi8rCharsetIsSupported()
-    {
-        new Smsc([
-            'login' => 'login',
-            'password' => 'password',
-            'format' => Smsc::FORMAT_JSON,
-            'charset' => 'koi8-r',
-        ]);
-    }
+        $smsc->setCharset('windows-1251');
+        $this->assertEquals('windows-1251', $smsc->getCharset());
 
-    public function testOtherCharsetsAreNotSupported()
-    {
+        $smsc->setCharset('koi8-r');
+        $this->assertEquals('koi8-r', $smsc->getCharset());
+
         $this->expectException(NotSupportedException::class);
-        new Smsc([
-            'login' => 'login',
-            'password' => 'password',
-            'format' => Smsc::FORMAT_JSON,
-            'charset' => 'windows-1252',
-        ]);
+        $smsc->setCharset('windows-1252');
     }
 
     public function testGetCommonParams()
@@ -118,5 +102,31 @@ class SmscTest extends PHPUnit_Framework_TestCase
             ],
             $smsc->getCommonParams()
         );
+    }
+
+    public function testApiCall()
+    {
+        Yii::$container = new Container([
+            'singletons' => [
+                HttpClient::class => function () {
+                    return Mockery::mock(HttpClient::class . '[send]')
+                        ->shouldReceive('send')
+                        ->andReturnUsing(['SmscApiSimulation', 'handle'])
+                        ->getMock();
+                }
+            ],
+        ]);
+
+        $smsc = new Smsc([
+            'login' => 'login',
+            'password' => 'password',
+        ]);
+
+        $response = $smsc->apiCall('balance.php', [
+            'fmt' => Smsc::FORMAT_JSON,
+            'login' => 'login',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(['balance' => 100], $response);
     }
 }

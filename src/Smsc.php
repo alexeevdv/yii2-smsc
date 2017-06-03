@@ -42,13 +42,13 @@ class Smsc extends \yii\base\Component
      * Message encoding
      * @var string
      */
-    public $charset = 'utf-8';
+    private $_charset;
 
     /**
      * Server response format
      * @var integer
      */
-    public $format;
+    private $_format;
 
     /**
      * @inheritdoc
@@ -57,24 +57,20 @@ class Smsc extends \yii\base\Component
     {
         parent::init();
 
-        if (!$this->login) {
+        if ($this->login === null) {
             throw new InvalidConfigException('`login` is required');
         }
 
-        if (!$this->password) {
+        if ($this->password === null) {
             throw new InvalidConfigException('`password` is required');
         }
 
-        if ($this->format === null) {
-            $this->format = static::FORMAT_JSON;
+        if ($this->getFormat() === null) {
+            $this->setFormat(static::FORMAT_JSON);
         }
 
-        if ($this->format !== static::FORMAT_JSON) {
-            throw new NotSupportedException('Only JSON is supported for `format`');
-        }
-
-        if (!in_array($this->charset, ['windows-1251', 'utf-8', 'koi8-r'])) {
-            throw new NotSupportedException('Unsupported charset: ' . $this->charset);
+        if ($this->getCharset() === null) {
+            $this->setCharset('utf-8');
         }
     }
 
@@ -98,6 +94,46 @@ class Smsc extends \yii\base\Component
                 $params
             )
         );
+    }
+
+    /**
+     * @param integer $format
+     * @throws NotSupportedException
+     */
+    public function setFormat($format)
+    {
+        if ($format !== static::FORMAT_JSON) {
+            throw new NotSupportedException('Only JSON is supported for `format`');
+        }
+        $this->_format = $format;
+    }
+
+    /**
+     * @return int
+     */
+    public function getFormat()
+    {
+        return $this->_format;
+    }
+
+    /**
+     * @param string $charset
+     * @throws NotSupportedException
+     */
+    public function setCharset($charset)
+    {
+        if (!in_array($charset, ['windows-1251', 'utf-8', 'koi8-r'])) {
+            throw new NotSupportedException('Unsupported charset: ' . $charset);
+        }
+        $this->_charset = $charset;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCharset()
+    {
+        return $this->_charset;
     }
 
     /**
@@ -158,12 +194,16 @@ class Smsc extends \yii\base\Component
      */
     public function apiCall($method, array $params = [])
     {
+        if (!isset($params['fmt'])) {
+            return null;
+        }
+
         Yii::trace(
             [
                 'method' => $method,
                 'params' => $params,
             ],
-            'smsc'
+            static::class
         );
 
         /** @var HttpClient $httpClient */
@@ -171,9 +211,9 @@ class Smsc extends \yii\base\Component
             ['baseUrl' => $this->baseUrl]
         ]);
         $response = $httpClient->get($method, $params)->send();
-        Yii::trace($response, 'smsc');
+        Yii::trace($response, static::class);
 
-        if ($this->format === static::FORMAT_JSON) {
+        if ($params['fmt'] === static::FORMAT_JSON) {
             return Json::decode($response->content);
         }
         return null;
